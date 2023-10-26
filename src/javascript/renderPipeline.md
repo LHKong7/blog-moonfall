@@ -1,0 +1,1 @@
+在浏览器渲染流水线中，当生成 `render tree` 之后， 则到了 `Layout`阶段, 在 `Layout` （也可以被称为`reflow` ）的阶段中，浏览器会为每个 `render tree`中的节点（node）创建和计算位置与大小，接下来 `CSSOM` 则暴露出

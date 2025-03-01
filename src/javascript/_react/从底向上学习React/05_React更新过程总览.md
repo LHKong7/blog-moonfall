@@ -35,9 +35,9 @@ scheduler调度 --> performConcurrentWorkOnRoot
 #### scheduleUpdateOnFiber
 - function signature: `function scheduleUpdateOnFiber(root, fiber, lane, eventTime)`
 - 流程分析（不包含错误检测）：
-  - `markRootUpdated(root, lane, eventTime);`
+  - `markRootUpdated(root, lane, eventTime);`:
+    - 定义：负责在更新发生时将 根Fiber树（root）标记为已更新。这确保了 React 知道 Fiber 树上有工作需要处理，并且可以相应地安排更新。如果新的更新有可能解除阻塞，它还可以处理清理暂停的车道。
   - `ensureRootIsScheduled(root, eventTime);`
-  - 
 
 
 #### ensureRootIsScheduled

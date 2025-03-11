@@ -208,7 +208,7 @@ updateContainer:
 - 调用 `enqueueUpdate`: 获取HostRoot中的 UpdateQueue 与 UpdateQueue中的shared（在初始化的时候初始了 `fiber.updateQueue`）之后调用 `enqueueConcurrentClassUpdate(fiber, sharedQueue, update, lane)` 初始化 循环链表 `interleaved` （可中断更新链表）之后调用 `markUpdateLaneFromFiberToRoot(fiber, lane);` 来标记树中的内容代更新。 （这里通过循环链表来实现原因在于 ***合并更新、批量处理更加容易：React 可以在渲染结束后，一次性将这个循环更新队列合并到真正的 pending 队列里（在 commit 或 render 结束时）。 *** ）
 - 调用 `scheduleUpdateOnFiber(root, current$1, lane, eventTime);`: 
   - 调用 `markRootUpdated(root, lane, eventTime);` 初始化 root的 `pendingLanes(root.pendingLanes |= updateLane;)、suspendedLanes、pingedLanes、eventTimes`，
-  - 调用 `ensureRootIsScheduled(root, eventTime);`:
+  - 调用 `ensureRootIsScheduled(root, eventTime);` 预示着调度开始: 
     - 调用 `markStarvedLanesAsExpired(root, currentTime);`: 检查是否有过期
     - 调用 `getNextLanes(root, root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes);` 获取下一个更新优先级集合
     - 调用 `getHighestPriorityLane(nextLanes)`： 找到优先级集合中最右侧的1（最高优先级）-> 会检测当前是否Scheduler中的任务与这个任务优先级相同。
@@ -285,13 +285,62 @@ updateContainer:
 接下来我们来看React render过程中的重要函数： `workLoopSync`
 workLoopSync 主要不断检测 `workInProgress` 并执行 `performUnitOfWork(workInProgress);`
 
+```javascript
+function workLoopSync() {
+  while (workInProgress !== null) {
+    performUnitOfWork(workInProgress);
+  }
+}
+```
+
 **performUnitOfWork(workInProgress)**
-从 `performUnitOfWork` 开始，则
+从 `performUnitOfWork` 开始，则开始处理 Diff 过程。
+
+
+整个函数的遍历流程如下函数：从传参进来的 `unitOfWork/全局变量WorkInProgress` 从顶向下遍历，
+```javascript
+function performUnitOfWork(unitOfWork) { // unitOfWork === workInProgress
+  var current = unitOfWork.alternate;
+  var next;
+
+  next = beginWork(current, unitOfWork, subtreeRenderLanes);
+  unitOfWork.memoizedProps = unitOfWork.pendingProps;
+
+  if (next === null) {
+    completeUnitOfWork(unitOfWork);
+  } else {
+    workInProgress = next;
+  }
+}
+```
+整个Render阶段做的事情可以整理为三件：
+1️⃣ 生成当前React Element对应的Fiber树。
+2️⃣ 为Fiber树进行打标（placement/deletion/update）
+3️⃣ 在CompleteWork结束后，生成Fiber树对应的真实DOM树
+
+// TODO：
+简单的延伸：
+- FunctionComponent会在这个阶段进行调用
+- Reconciler
+
+**TL；DR**
+如果大家有兴趣，我会把React源码做成一个系列，并详细分析React每处改动，
+
+**beginWork**
+
+**completeWork**
  
 
 
 ##### Commit 阶段
 
+当Render结束后，会进入到React的Commit阶段，
+
+**commitRoot(root, workInProgressRootRecoverableErrors, workInProgressTransitions);**:
+- flushPassiveEffects()
+- `executionContext |= CommitContext` 标志着进入到Commit阶段
+
+**commitMutationEffects(root, root.finishedWork, lanes);**
 
 
 #### 触发更新

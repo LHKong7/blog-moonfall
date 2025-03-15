@@ -191,6 +191,7 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = funct
 }
 ```
 
+![四大流程](./assets/01/【发布】React四大流程.png "React 四大流程")
 
 ### 更新
 当初始化结束后，就进入到更新阶段，更新又分为初始化更新与触发更新。初始化更新为 `ReactDOM.render` 而 触发更新则由 `state` 发生变化而触发。
@@ -320,8 +321,11 @@ function performUnitOfWork(unitOfWork) { // unitOfWork === workInProgress
 
 // TODO：
 简单的延伸：
-- FunctionComponent会在这个阶段进行调用
-- Reconciler
+- 函数式组件会在这个阶段调用会在这个阶段进行调用
+- Reconciler会进行一系列优化来减少时间复杂度：
+  - 如果组件状态并没有更新（state、context），也没有被调度更新，组件会直接进行复用。（beginWork中核心流程）
+  - 通过唯一key来识别元素，减少不必要的节点操作。
+  - 当进行更新时，识别到不同的元素时，React直接销毁旧的子树并创建新树。
 
 **TL；DR**
 如果大家有兴趣，我会把React源码做成一个系列，并详细分析React每处改动，
@@ -334,13 +338,22 @@ function performUnitOfWork(unitOfWork) { // unitOfWork === workInProgress
 
 ##### Commit 阶段
 
-当Render结束后，会进入到React的Commit阶段，
+当Render结束后，会进入到React的Commit阶段，在Commit阶段中，React会将副作用处理，首先会将 `PassiveEffect` 进行处理（通过 useEffect 创建的副作用）
 
 **commitRoot(root, workInProgressRootRecoverableErrors, workInProgressTransitions);**:
 - flushPassiveEffects()
 - `executionContext |= CommitContext` 标志着进入到Commit阶段
 
+
 **commitMutationEffects(root, root.finishedWork, lanes);**
+
+
+**commitLayoutEffects**
+
+**requestPaint**
+
+
+**onCommitRoot**
 
 
 #### 触发更新
